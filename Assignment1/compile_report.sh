@@ -1,0 +1,1 @@
+pandoc Readme.md --pdf-engine=pdflatex -f markdown-implicit_figures -V geometry:"top=1.5cm, bottom=0.5cm, left=2cm, right=2cm" -o report.pdf
