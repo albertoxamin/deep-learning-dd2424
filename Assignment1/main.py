@@ -137,6 +137,17 @@ def MiniBatchGD(X, Y, lab, val, test, W, b, n_batch=100, eta=0.001, epochs=100, 
     # plt.show()
 
 
+def compare(X, Y, W, b, n_batch=100):
+    batches_x, batches_y = [], []
+    for i in range(X.shape[1]//n_batch):
+        n = i*n_batch
+        batches_x.append(X[:, n:n+n_batch])
+        batches_y.append(Y[:, n:n+n_batch])
+    an_gw, an_gb = ComputeGradsNumSlow(batches_x[0], batches_y[0], W, b, 0, 0.1)
+    gw, gb = ComputeGradients(batches_x[0], batches_y[0], b, W, 0, n_batch=n_batch)
+    print(abs(np.mean(an_gw) - np.mean(gw)))
+    print(abs(np.mean(an_gb) - np.mean(gb)))
+
 def main():
     print("CIFAR-10-CLASSIFIER")
     train_X, train_Y, train_labels = LoadBatch(
@@ -152,7 +163,9 @@ def main():
     val_X = norm(val_X, mean_X, std_X)
     test_X = norm(test_X, mean_X, std_X)
     mu, sigma = 0, 0.01
+
     W, b = np.random.normal(mu, sigma, (10, 3072)), np.random.normal(mu, sigma, (10, 1))
+    compare(train_X, train_Y, W, b, n_batch=100)
     MiniBatchGD(train_X, train_Y, train_labels, (val_X, val_Y, val_labels), (test_X, test_Y, test_labels), W, b, _lambda=0, epochs=40, n_batch=100, eta=0.1)
     W, b = np.random.normal(mu, sigma, (10, 3072)), np.random.normal(mu, sigma, (10, 1))
     MiniBatchGD(train_X, train_Y, train_labels, (val_X, val_Y, val_labels), (test_X, test_Y, test_labels), W, b, _lambda=0, epochs=40, n_batch=100, eta=0.001)
