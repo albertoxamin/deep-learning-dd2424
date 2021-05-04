@@ -240,22 +240,22 @@ class NeuralNet:
         # return test_acc
         epochs_label = np.arange(1, epochs+1, 1)
         epochs_label = update_steps
-        fig, ax = plt.subplots(1, 2)
-        ax[0].plot(epochs_label, train_cost, 'o-', label="Training Data")
-        ax[0].plot(epochs_label, val_cost, label="Validation Data")
-        ax[0].legend()
-        ax[0].set(xlabel='Update Steps', ylabel='Loss')
-        ax[0].grid()
-        ax[1].plot(epochs_label, train_acc, label="Training Data")
-        ax[1].plot(epochs_label, val_acc, label="Validation Data")
-        ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
-        print("Final Test Accuracy", test_acc)
-        ax[1].legend()
-        ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
-        ax[1].grid()
+        fig, ax = plt.subplots()
+        ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
+        ax.plot(epochs_label, val_cost, label="Validation Data")
+        ax.legend()
+        ax.set(xlabel='Update Steps', ylabel='Loss')
+        ax.grid()
+        # ax[1].plot(epochs_label, train_acc, label="Training Data")
+        # ax[1].plot(epochs_label, val_acc, label="Validation Data")
+        # ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
+        # print("Final Test Accuracy", test_acc)
+        # ax[1].legend()
+        # ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
+        # ax[1].grid()
         fig.tight_layout()
-        plt.show()
-        # plt.savefig(f'Result Pics/lambda_{_lambda}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}.jpg')
+        # plt.show()
+        plt.savefig(f'Result Pics/lambda_{_lambda}_sig{self.sigma}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}_bn_{batch_norm}_nodes_{str(len(self.hidden_nodes)+1)}.jpg')
 
         # plt.show()
 
@@ -309,7 +309,7 @@ def main():
 
     # nnt = NeuralNet((train_X[:, 0:100], train_Y[:, 0:100], train_labels[:, 0:100]), mu, sigma, hidden_nodes=[10])
     # nnt.SanityCheck()
-
+    # return
     # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50], init_mode='he')
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.008399842677560622, epochs=40, n_batch=100, eta={
     #     'min': 1e-5,
@@ -323,19 +323,26 @@ def main():
     #     'max': 1e-1,
     #     'step_size': 2250, 'l': 0
     # })
-    # poor performer
-    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
-    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
-    #     'min': 1e-5,
-    #     'max': 1e-1,
-    #     'step_size': 2250, 'l': 0
-    # })
     # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50], init_mode='he')
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
     #     'min': 1e-5,
     #     'max': 1e-1,
     #     'step_size': 2250, 'l': 0
     # }, batch_norm=True)
+
+    # # poor performer
+    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
+    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
+    #     'min': 1e-5,
+    #     'max': 1e-1,
+    #     'step_size': 2250, 'l': 0
+    # })
+    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
+    nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
+        'min': 1e-5,
+        'max': 1e-1,
+        'step_size': 2250, 'l': 0
+    }, batch_norm=True)
     # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=60, n_batch=100, eta={
     #     'min': 1e-5,
