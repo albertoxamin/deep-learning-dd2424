@@ -239,22 +239,22 @@ def main():
     # nnt = NeuralNet((train_X[:, 0:100], train_Y[:, 0:100], train_labels[:, 0:100]), mu, sigma, hidden_nodes=50)
     # nnt.SanityCheck()
 
-    print('figure3')
-    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=50)
-    nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.01, epochs=10, n_batch=100, eta={
-        'min': 1e-5,
-        'max': 1e-1,
-        'step_size': 500, 'l': 0
-    }) # graph figure 3
+    # print('figure3')
+    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=50)
+    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.01, epochs=10, n_batch=100, eta={
+    #     'min': 1e-5,
+    #     'max': 1e-1,
+    #     'step_size': 500, 'l': 0
+    # }) # graph figure 3
 
-    print('figure4')
-    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=50)
-    nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.01, epochs=50, n_batch=100, eta={
-        'min': 1e-5,
-        'max': 1e-1,
-        'step_size': 800, 'l': 0
-    }) # graph figure 4
-    return
+    # print('figure4')
+    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=50)
+    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.01, epochs=50, n_batch=100, eta={
+    #     'min': 1e-5,
+    #     'max': 1e-1,
+    #     'step_size': 800, 'l': 0
+    # }) # graph figure 4
+    # return
 
     ## coarse search
     # l_min = -5
@@ -298,7 +298,7 @@ def main():
     nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.008399842677560622, epochs=40, n_batch=100, eta={
         'min': 1e-5,
         'max': 1e-1,
-        'step_size': 800, 'l': -2.0757288478556335
+        'step_size': 800, 'l': 0
     }) # final network
 
 if __name__ == "__main__":
