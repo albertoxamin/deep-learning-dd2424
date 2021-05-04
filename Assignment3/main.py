@@ -2,6 +2,7 @@
 from os import X_OK, times
 import pickle
 import numpy as np
+from numpy.lib.twodim_base import triu_indices_from
 import numpy.matlib
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import std
@@ -237,25 +238,25 @@ class NeuralNet:
                 print(f"Epoch: {e}\t cost: {train_cost[-1]}\t train_acc: {train_acc[-1]}\t val_acc: {val_acc[-1]}")
 
         test_acc = self.ComputeAccuracy(test[0], test[2])
-        # return test_acc
-        epochs_label = np.arange(1, epochs+1, 1)
-        epochs_label = update_steps
-        fig, ax = plt.subplots()
-        ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
-        ax.plot(epochs_label, val_cost, label="Validation Data")
-        ax.legend()
-        ax.set(xlabel='Update Steps', ylabel='Loss')
-        ax.grid()
-        # ax[1].plot(epochs_label, train_acc, label="Training Data")
-        # ax[1].plot(epochs_label, val_acc, label="Validation Data")
-        # ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
-        # print("Final Test Accuracy", test_acc)
-        # ax[1].legend()
-        # ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
-        # ax[1].grid()
-        fig.tight_layout()
-        # plt.show()
-        plt.savefig(f'Result Pics/lambda_{_lambda}_sig{self.sigma}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}_bn_{batch_norm}_nodes_{str(len(self.hidden_nodes)+1)}.jpg')
+        return test_acc
+        # epochs_label = np.arange(1, epochs+1, 1)
+        # epochs_label = update_steps
+        # fig, ax = plt.subplots()
+        # ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
+        # ax.plot(epochs_label, val_cost, label="Validation Data")
+        # ax.legend()
+        # ax.set(xlabel='Update Steps', ylabel='Loss')
+        # ax.grid()
+        # # ax[1].plot(epochs_label, train_acc, label="Training Data")
+        # # ax[1].plot(epochs_label, val_acc, label="Validation Data")
+        # # ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
+        # # print("Final Test Accuracy", test_acc)
+        # # ax[1].legend()
+        # # ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
+        # # ax[1].grid()
+        # fig.tight_layout()
+        # # plt.show()
+        # plt.savefig(f'Result Pics/lambda_{_lambda}_sig{self.sigma}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}_bn_{batch_norm}_nodes_{str(len(self.hidden_nodes)+1)}.jpg')
 
         # plt.show()
 
@@ -337,12 +338,12 @@ def main():
     #     'max': 1e-1,
     #     'step_size': 2250, 'l': 0
     # })
-    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
-    nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
-        'min': 1e-5,
-        'max': 1e-1,
-        'step_size': 2250, 'l': 0
-    }, batch_norm=True)
+    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
+    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
+    #     'min': 1e-5,
+    #     'max': 1e-1,
+    #     'step_size': 2250, 'l': 0
+    # }, batch_norm=True)
     # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=60, n_batch=100, eta={
     #     'min': 1e-5,
@@ -350,23 +351,65 @@ def main():
     #     'step_size': 2250, 'l': 0
     # }, batch_norm=True)
 
-    sigmas = [1e-1, 1e-3, 1e-4]
-    network = [50, 50]
-    for sig in sigmas:
-        print("BATCH NORM OFF")
-        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
-        nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+    # lambda search
+    l_min = 1e-5
+    l_max = 1e-1
+    ls = [l_min + (l_max - l_min)*random.random() for i in range(10)]
+    scores = []
+    for l in ls:
+        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50])
+        score = nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=l, epochs=10, n_batch=100, eta={
             'min': 1e-5,
             'max': 1e-1,
             'step_size': 2250, 'l': 0
-        }, batch_norm=False)
-        print("BATCH NORM ON")
-        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
-        nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+        }, batch_norm=True, verbose=False)
+        scores.append(score)
+        print(f'lambda:{l} score:{score}')
+    best1 = scores.index(max(scores))
+    scores.pop(best1)
+    best1 = ls[best1]
+    best2 = ls[scores.index(max(scores))]
+    print(best1, best2)
+    l_min = min(best1, best2)
+    l_max = max(best1, best2)
+    ls = [l_min + (l_max - l_min)*random.random() for i in range(10)]
+    scores = []
+    for l in ls:
+        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50])
+        score = nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=l, epochs=10, n_batch=100, eta={
             'min': 1e-5,
             'max': 1e-1,
             'step_size': 2250, 'l': 0
-        }, batch_norm=True)
+        }, batch_norm=True, verbose=False)
+        scores.append(score)
+        print(f'lambda:{l} score:{score}')
+    best = ls[scores.index(max(scores))]
+    print("best lambda", best)
+    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50])
+    score = nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=best, epochs=60, n_batch=100, eta={
+        'min': 1e-5,
+        'max': 1e-1,
+        'step_size': 2250, 'l': 0
+    }, batch_norm=True, verbose=True)
+    print("best lambda final score", score)
+    # sensitivity
+    # sigmas = [1e-1, 1e-3, 1e-4]
+    # network = [50, 50]
+    # for sig in sigmas:
+    #     print("BATCH NORM OFF")
+    #     nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
+    #     nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+    #         'min': 1e-5,
+    #         'max': 1e-1,
+    #         'step_size': 2250, 'l': 0
+    #     }, batch_norm=False)
+    #     print("BATCH NORM ON")
+    #     nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
+    #     nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+    #         'min': 1e-5,
+    #         'max': 1e-1,
+    #         'step_size': 2250, 'l': 0
+    #     }, batch_norm=True)
 
 if __name__ == "__main__":
     main()
