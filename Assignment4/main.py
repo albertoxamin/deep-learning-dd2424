@@ -129,7 +129,7 @@ class RNN(object):
 
             if n % 10000 == 0:
                 gen = rnn.synthetize(hidden_prev, inputs[0], 200)
-                print(f"-- synthetized text at {n} its:")
+                print(f"\033[91m-- synthetized text at {n} its:\033[0m")
                 print(gen)
                 print(f'\033[91mSmooth loss: {smooth_loss}\033[0m')
 
@@ -155,7 +155,6 @@ class RNN(object):
         ax.legend()
         ax.set(xlabel='Iterations', ylabel='Loss')
         ax.grid()
-        ax.title("loss over training run")
         plt.savefig("loss_plot.png")
         plt.show()
 
