@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.core.function_base import geomspace
 from numpy.lib.function_base import gradient
 
 class Data(object):
@@ -8,7 +9,7 @@ class Data(object):
         self.data_str = open(path, mode='r').read()
         self.data_vec = list(self.data_str)
         self.chars = list(set(self.data_str))
-        self.char_map = dict((c,i) for i,c in enumerate(self.chars))
+        self.char_map = dict((c, i) for i,c in enumerate(self.chars))
         self.int2char_map = dict((i, c) for i,c in enumerate(self.chars))
 
 class RNN(object):
@@ -48,6 +49,32 @@ class RNN(object):
             next_chars[input] = 1
             txt += self.data.int2char_map[input]
         return txt
+
+    def sanity_check(self, inputs, targets, hidden_prev):
+        print("Gradient Sanity Checks")
+        an_gs, _, _ = self.compute_grads(inputs, targets, hidden_prev)
+        nm_gs = self.compute_grads_num(inputs, targets, hidden_prev)
+
+        for i in range(len(an_gs)):
+            print(f"diff {'bcUWV'[i]}:{abs(np.mean(an_gs[i]) - np.mean(nm_gs[i]))}")
+
+    def compute_grads_num(self, inputs, targets, hidden_prev):
+        g_b = np.zeros_like(self.b)
+        g_c = np.zeros_like(self.c)
+        g_U = np.zeros_like(self.U)
+        g_W = np.zeros_like(self.W)
+        g_V = np.zeros_like(self.V)
+        grads = (g_b, g_c, g_U, g_W, g_V)
+        for g in grads:
+            for i in range(20):
+                prev = g.flat[i]
+                g.flat[i] = prev + 1e-50
+                _, loss1, _ = self.compute_grads(inputs, targets, hidden_prev)
+                g.flat[i] = prev - 1e-50
+                _, loss2, _ = self.compute_grads(inputs, targets, hidden_prev)
+                g.flat[i] = prev
+                g.flat[i] = (loss1 - loss2) / (2 * 1e-50)
+        return grads
 
     def compute_grads(self, inputs, targets, hidden_prev):
         x_, a_, h_, o_, p_ = {}, {}, {}, {}, {}
@@ -116,6 +143,8 @@ class RNN(object):
 
             inputs = [data.char_map[char] for char in data.data_str[cursor:cursor + rnn.seq_len]]
             targets = [data.char_map[char] for char in data.data_str[cursor + 1:cursor + rnn.seq_len + 1]]
+            if n == 0:
+                rnn.sanity_check(inputs, targets, hidden_prev)
 
             gradients, loss, hidden_prev = rnn.compute_grads(inputs, targets, hidden_prev)
 
@@ -123,9 +152,6 @@ class RNN(object):
                 smooth_loss = loss
             smooth_loss = 0.999 * smooth_loss + 0.001 * loss
             losses.append(smooth_loss)
-
-                        # if n == 0:
-                        #     rnn.CheckGrads(inputs, targets, hidden_prev)
 
             if n % 10000 == 0:
                 gen = rnn.synthetize(hidden_prev, inputs[0], 200)
