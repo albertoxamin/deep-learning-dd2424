@@ -34,6 +34,8 @@ class NeuralNet:
         b.append(np.zeros((self.K, 1)))
 
         self.W, self.b = W, b
+        self.gamma = [np.ones((size, 1)) for size in self.hidden_nodes]
+        self.beta = [np.zeros((size, 1)) for size in self.hidden_nodes]
 
     def softmax(self, x):
         return np.exp(x) / np.sum(np.exp(x), axis=0)
@@ -57,7 +59,7 @@ class NeuralNet:
 
                 # batch normalization calculations
                 batch_norm = np.zeros(np.shape(score_layer))
-                a = np.diag(np.power((vars[-1] + 1e-16), (-1 / 2))) # 1e-16 is to prevent zero division
+                a = np.diag(np.power((vars[-1] + 1e-20), (-1 / self.d)))
                 for i in range(np.shape(score_layer)[1]):
                     batch_norm[:, i] = np.dot(a, (score_layer[:, i] - mus[-1]))
 
@@ -209,7 +211,7 @@ class NeuralNet:
         update_steps = []
         self.moving_avg_mean = [np.zeros(l) for l in self.hidden_nodes]
         self.moving_avg_var = [np.zeros(l) for l in self.hidden_nodes]
-        alpha = 0
+        alpha = 0.9
         # print (len(batches_x))
         for e in range(epochs):
             for ba in range(len(batches_x)):
@@ -218,7 +220,7 @@ class NeuralNet:
                     for layer in range(len(self.hidden_nodes)):
                         self.moving_avg_mean[layer] = alpha * self.moving_avg_mean[layer] + (1 - alpha) * gm[layer]
                         self.moving_avg_var[layer] = alpha * self.moving_avg_var[layer] + (1 - alpha) * gv[layer]
-                    alpha = 0.99
+                    # alpha = 0.9
                 else:
                     gw, gb = self.ComputeGradients(batches_x[ba], batches_y[ba], _lambda)
                 comp_eta = compute_eta(t, eta['min'], eta['max'], eta['step_size'], eta['l'])
@@ -238,27 +240,34 @@ class NeuralNet:
                 print(f"Epoch: {e}\t cost: {train_cost[-1]}\t train_acc: {train_acc[-1]}\t val_acc: {val_acc[-1]}")
 
         test_acc = self.ComputeAccuracy(test[0], test[2])
-        return test_acc
-        # epochs_label = np.arange(1, epochs+1, 1)
-        # epochs_label = update_steps
-        # fig, ax = plt.subplots()
-        # ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
-        # ax.plot(epochs_label, val_cost, label="Validation Data")
-        # ax.legend()
-        # ax.set(xlabel='Update Steps', ylabel='Loss')
-        # ax.grid()
-        # # ax[1].plot(epochs_label, train_acc, label="Training Data")
-        # # ax[1].plot(epochs_label, val_acc, label="Validation Data")
-        # # ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
-        # # print("Final Test Accuracy", test_acc)
-        # # ax[1].legend()
-        # # ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
-        # # ax[1].grid()
-        # fig.tight_layout()
-        # # plt.show()
-        # plt.savefig(f'Result Pics/lambda_{_lambda}_sig{self.sigma}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}_bn_{batch_norm}_nodes_{str(len(self.hidden_nodes)+1)}.jpg')
+        if verbose:
+            print(test_acc)
+            epochs_label = np.arange(1, epochs+1, 1)
+            epochs_label = update_steps
+            fig, ax = plt.subplots()
+            ax.plot(epochs_label, train_cost, 'o-', label="moving")
+            ax.legend()
+            ax.grid()
+            plt.show()
+            fig, ax = plt.subplots()
+            ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
+            ax.plot(epochs_label, val_cost, label="Validation Data")
+            ax.legend()
+            ax.set(xlabel='Update Steps', ylabel='Loss')
+            ax.grid()
+            # ax[1].plot(epochs_label, train_acc, label="Training Data")
+            # ax[1].plot(epochs_label, val_acc, label="Validation Data")
+            # ax[1].plot(epochs_label[-1], test_acc, 'x-', label="Final Test Accuracy")
+            # print("Final Test Accuracy", test_acc)
+            # ax[1].legend()
+            # ax[1].set(xlabel='Update Steps', ylabel='Accuracy')
+            # ax[1].grid()
+            fig.tight_layout()
+            # plt.show()
+            plt.savefig(f'Result Pics/lambda_{_lambda}_sig{self.sigma}_epo_{epochs}_nbatch_{n_batch}_eta_{eta}_bn_{batch_norm}_nodes_{str(len(self.hidden_nodes)+1)}.jpg')
 
-        # plt.show()
+            # plt.show()
+        return test_acc
 
 
 
@@ -281,17 +290,17 @@ def norm(X, mean, std):
 def main():
     print("CIFAR-10-CLASSIFIER")
     train_X, train_Y, train_labels = LoadBatch("../Datasets/cifar-10-batches-py/data_batch_1")
-    val_X, val_Y, val_labels = LoadBatch("../Datasets/cifar-10-batches-py/data_batch_2")
-    # for i in range(4):
-    #     X, Y, labels = LoadBatch(
-    #     f"../Datasets/cifar-10-batches-py/data_batch_{i+2}")
-    #     train_X = np.concatenate((train_X, X), axis=1)
-    #     train_Y = np.concatenate((train_Y, Y), axis=1)
-    #     train_labels = np.concatenate((train_labels, labels), axis=1)
+    # val_X, val_Y, val_labels = LoadBatch("../Datasets/cifar-10-batches-py/data_batch_2")
+    for i in range(4):
+        X, Y, labels = LoadBatch(
+        f"../Datasets/cifar-10-batches-py/data_batch_{i+2}")
+        train_X = np.concatenate((train_X, X), axis=1)
+        train_Y = np.concatenate((train_Y, Y), axis=1)
+        train_labels = np.concatenate((train_labels, labels), axis=1)
 
-    # val_size = 1000
-    # val_X, val_Y, val_labels = train_X[:, -val_size:], train_Y[:, -val_size:], train_labels[:, -val_size:]
-    # train_X, train_Y, train_labels = train_X[:, :-val_size], train_Y[:, :-val_size], train_labels[:, :-val_size]
+    val_size = 5000
+    val_X, val_Y, val_labels = train_X[:, -val_size:], train_Y[:, -val_size:], train_labels[:, -val_size:]
+    train_X, train_Y, train_labels = train_X[:, :-val_size], train_Y[:, :-val_size], train_labels[:, :-val_size]
     test_X, test_Y, test_labels = LoadBatch(
         "../Datasets/cifar-10-batches-py/test_batch")
     mean_X, std_X = np.array([np.mean(train_X, 1)]).T, np.array(
@@ -336,14 +345,14 @@ def main():
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
     #     'min': 1e-5,
     #     'max': 1e-1,
-    #     'step_size': 2250, 'l': 0
+    #     'step_size': 2250, 'l': 0.005
     # })
-    # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
-    # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
-    #     'min': 1e-5,
-    #     'max': 1e-1,
-    #     'step_size': 2250, 'l': 0
-    # }, batch_norm=True)
+    nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
+    nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.005, epochs=60, n_batch=100, eta={
+        'min': 1e-5,
+        'max': 1e-1,
+        'step_size': 2250, 'l': 0.005
+    }, batch_norm=True)
     # nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50, 30, 20, 20, 10, 10, 10, 10], init_mode='he')
     # nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=60, n_batch=100, eta={
     #     'min': 1e-5,
@@ -393,23 +402,23 @@ def main():
     }, batch_norm=True, verbose=True)
     print("best lambda final score", score)
     # sensitivity
-    # sigmas = [1e-1, 1e-3, 1e-4]
-    # network = [50, 50]
-    # for sig in sigmas:
-    #     print("BATCH NORM OFF")
-    #     nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
-    #     nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
-    #         'min': 1e-5,
-    #         'max': 1e-1,
-    #         'step_size': 2250, 'l': 0
-    #     }, batch_norm=False)
-    #     print("BATCH NORM ON")
-    #     nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
-    #     nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
-    #         'min': 1e-5,
-    #         'max': 1e-1,
-    #         'step_size': 2250, 'l': 0
-    #     }, batch_norm=True)
+    sigmas = [1e-1, 1e-3, 1e-4]
+    network = [50, 50]
+    for sig in sigmas:
+        print("BATCH NORM OFF")
+        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
+        nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+            'min': 1e-5,
+            'max': 1e-1,
+            'step_size': 2250, 'l': 0
+        }, batch_norm=False)
+        print("BATCH NORM ON")
+        nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma=sig, hidden_nodes=network)
+        nnt.MiniBatchGD((val_X, val_Y, val_labels), (test_X, test_Y, test_labels), _lambda=0.0000075, epochs=20, n_batch=100, eta={
+            'min': 1e-5,
+            'max': 1e-1,
+            'step_size': 2250, 'l': 0
+        }, batch_norm=True)
 
 if __name__ == "__main__":
     main()
