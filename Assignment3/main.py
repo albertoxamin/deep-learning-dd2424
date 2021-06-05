@@ -245,12 +245,12 @@ class NeuralNet:
             epochs_label = np.arange(1, epochs+1, 1)
             epochs_label = update_steps
             fig, ax = plt.subplots()
-            ax.plot(epochs_label, train_cost, 'o-', label="moving")
+            ax.plot(epochs_label, train_cost, label="moving")
             ax.legend()
             ax.grid()
             plt.show()
             fig, ax = plt.subplots()
-            ax.plot(epochs_label, train_cost, 'o-', label="Training Data")
+            ax.plot(epochs_label, train_cost, label="Training Data")
             ax.plot(epochs_label, val_cost, label="Validation Data")
             ax.legend()
             ax.set(xlabel='Update Steps', ylabel='Loss')
@@ -363,7 +363,7 @@ def main():
     # lambda search
     l_min = 1e-5
     l_max = 1e-1
-    ls = [l_min + (l_max - l_min)*random.random() for i in range(10)]
+    ls = [10e-5, 10e-(4.5), 10e-4, 10e-(3.5), 10e-3, 10e-(2.5), 10e-2, 10e-(1.5), 10e-1]
     scores = []
     for l in ls:
         nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50])
@@ -381,7 +381,7 @@ def main():
     print(best1, best2)
     l_min = min(best1, best2)
     l_max = max(best1, best2)
-    ls = [l_min + (l_max - l_min)*random.random() for i in range(10)]
+    ls = [l_min + (l_max - l_min)*random.random() for i in range(15)]
     scores = []
     for l in ls:
         nnt = NeuralNet((train_X, train_Y, train_labels), mu, sigma, hidden_nodes=[50,50])
